@@ -43,7 +43,7 @@ def request_to_api(url, headers, querystring):
 
 def find_location(message):
     """
-    Функция для определния локации поиска.
+    Функция для определения локации поиска.
     :param message:
     :return:
     """
