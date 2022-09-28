@@ -4,8 +4,8 @@ import re
 import json
 from datetime import datetime
 import telebot
-from user_data import *
-
+#from user_data import *
+from loader import bot
 
 def calculate_price_for_night(date_1, date_2, price):
     """
@@ -36,6 +36,7 @@ def request_to_api(url, headers, querystring):
                                     params=querystring,
                                     timeout=10)
         if response.status_code == requests.codes.ok:#проверка
+            print(response.text)
             return response.text
     except requests.exceptions.Timeout:
         return None
@@ -47,3 +48,29 @@ def find_location(message):
     :param message:
     :return:
     """
+    user = User.get_user(message.from_user.id)# берем юзера из словаря
+    user.city = message.text
+    markup = types.InlineKeyboardMarkup()
+
+    url_for_destination_id = "https://hotels4.p.rapidapi.com/locations/v2/search"
+
+    querystring_for_destination_id = {"query": user.city,
+                                      "locale": "ru_RU",
+                                      "currency": "USD"
+                                      }
+    headers = {
+        'X-RapidAPI-Key': 'e315c3fde3mshabab10a3881c217p1ae69ejsn04fc52c9199b',
+        'X-RapidAPI-Host': 'hotels4.p.rapidapi.com'
+    }
+
+    response = request_to_api(url=url_for_destination_id,
+                              headers=headers,
+                              querystring=querystring_for_destination_id)
+
+    if not response:
+        bot.send_message(message.chat.id, "Произошла ошибка.\nПопробуйте снова.")
+    else:
+
+        result = json.loads(response)['suggestions'][0]['entities']
+
+
