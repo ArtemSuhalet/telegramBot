@@ -6,7 +6,7 @@ from datetime import datetime
 import telebot
 from database import user_data
 from loader import bot
-import schedule
+from database import schedule
 
 
 def delete_spans(data: str) -> str:
@@ -180,7 +180,7 @@ def set_distance_from_center(message: types.Message):
     :return:
     """
     user = User.get_user(message.from_user.id)
-    if message.text.isdigit() or is_number_float.(str(modify_number(message.text))):
+    if message.text.isdigit() or is_number_float(str(modify_number(message.text))):
         user.distance_from_center = message.text + " км"
         return calendars.set_arrival_date(message)
 
