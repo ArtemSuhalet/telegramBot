@@ -1,6 +1,7 @@
-from database import user_data
+from user_data import User
 import telebot
 from peewee import *
+from loader import bot, my_db
 
 
 class BaseModel(Model):
@@ -45,3 +46,26 @@ def add_user_data(user_telegram_id, command, request_time, text_for_database) ->
                          )
 
 
+def to_use_literals(string: str) -> str:
+    """
+    Функция принимает значение 'название отелей' из базы данных и в этом значении заменяет символ ; на литерал
+    :param string:
+    :return: string
+    """
+    return string.replace(';', '\n')
+
+
+def show_history(message: telebot.types.Message) -> None:
+    """
+    Функция, которая отправляет пользователю историю запросов.
+    :param message:
+    :return: None
+    """
+
+    user = User.get_user(message.from_user.id)
+    with my_db:
+        for data in User_Data.select().where(User_Data.user_telegram_id == user.user_id):
+            history_to_show = f"Команда: {data.user_command}\n" \
+                              f"Дата и время обращения: {data.user_time_request}\n" \
+                              f"Список найденных отелей:\n{to_use_literals(data.user_hotels_list)}"
+            bot.send_message(user.user_id, history_to_show)

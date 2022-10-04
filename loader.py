@@ -1,8 +1,9 @@
+import pymysql
 from telebot import TeleBot
 from telebot.storage import StateMemoryStorage
 from config_data import config, host, user, password, db_name
 from peewee import *
-import pymysql
+
 
 
 storage = StateMemoryStorage()
