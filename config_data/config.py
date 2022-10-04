@@ -19,9 +19,6 @@ DEFAULT_COMMANDS = (
     ('history', 'Вывод истории поиска отелей')
 )
 
-db_name = 'db_bot'
-host = 'localhost'
-user = 'root'
-password = 'root'
+
 
 
