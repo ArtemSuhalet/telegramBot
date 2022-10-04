@@ -6,9 +6,9 @@ if not find_dotenv():
 else:
     load_dotenv()
 
-BOT_TOKEN = os.getenv('BOT_TOKEN')#5647023944:AAFycsOng1PsagKmGHWB4cDzruIkIcfb0es
+BOT_TOKEN = os.getenv('BOT_TOKEN')
 
-RAPID_API_KEY = os.getenv('RAPID_API_KEY')#Artem_suhalet23
+RAPID_API_KEY = os.getenv('RAPID_API_KEY')
 DEFAULT_COMMANDS = (
     ('start', "Запустить бота"),
     ('help', "Вывести справку"),
@@ -17,3 +17,10 @@ DEFAULT_COMMANDS = (
     ('bestdeal', 'Вывод отелей, наиболее подходящих по цене и расположению от центра'),
     ('history', 'Вывод истории поиска отелей')
 )
+
+db_name = 'db_bot'
+host = 'localhost'
+user = 'root'
+password = 'root'
+
+

@@ -17,7 +17,7 @@ class User:
         self.arrival_date: str = ""
         self.departure_date: str = ""
         self.list_of_hotels_id: list = []
-        ...
+
 
     @classmethod
     def add_user(cls, user_id, user):
