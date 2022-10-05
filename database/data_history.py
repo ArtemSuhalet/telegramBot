@@ -1,9 +1,10 @@
-from user_data import User
+import sqlite3
+from database import user_data
 import telebot
+from loader import bot
 from peewee import *
-from loader import bot, my_db
 
-
+my_db = sqlite3.connect('bot.db')
 class BaseModel(Model):
     class Meta:
         database = my_db
@@ -22,7 +23,7 @@ def create_db() -> None:
     :return:
     """
     try:
-        my_db.connect()
+        #my_db.connect()
         User_Data.create_table()
     except InternalError as px:
         print(str(px))
@@ -37,7 +38,7 @@ def add_user_data(user_telegram_id, command, request_time, text_for_database) ->
     :param text_for_database:
     :return:
     """
-
+    User_Data.create_table()
     with my_db:
         User_Data.create(user_telegram_id=user_telegram_id,
                          user_command=command,
