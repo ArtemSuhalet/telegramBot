@@ -4,9 +4,12 @@ import re
 import json
 from datetime import datetime
 import telebot
-from database import user_data
+from database import data_history
+from .user_data import User
 from loader import bot
 from database import schedule
+
+
 
 
 def delete_spans(data: str) -> str:
@@ -24,7 +27,28 @@ def modify_number(number: str) -> int or float:
     :param number: целочисленное или вещественное число с запятой
     :return: целочисленное или вещественное число в соответствии с правилами  Python
     """
-    pass
+    if re.sub(",", ".", number.split()[0], 1).isdigit():
+        modified_num = int(re.sub(",", ".", number.split()[0], 1))
+    else:
+        modified_num = float(re.sub(",", ".", number.split()[0], 1))
+    return modified_num
+
+def modify_price(num: str) -> int:
+    """
+    Т.к. Rapid API возвращает значение стоимости с разделителями в виде запятой,
+    данная функция предназначена для удаления запятой.
+    :param num: строка
+    :return: число
+    """
+    return int(re.sub(r'[^0-9]+', "", num))
+
+def add_indent(s: int) -> str:
+    """
+    Функция в значение стоимости добавляет разделитель для удобства чтения информации.
+    :param s: число
+    :return: строка
+    """
+    return '{0:,}'.format(s).replace(',', ' ')
 
 def is_number_float(line: str) -> bool:
     """
@@ -32,7 +56,10 @@ def is_number_float(line: str) -> bool:
     :param line: строка
     :return: True or False
     """
-    pass
+    i = re.match(r'\d*\.?\d+', line)
+    if i:
+        return i.group() == line
+    return False
 
 def calculate_price_for_night(date_1, date_2, price):
     """
@@ -182,5 +209,218 @@ def set_distance_from_center(message: types.Message):
     user = User.get_user(message.from_user.id)
     if message.text.isdigit() or is_number_float(str(modify_number(message.text))):
         user.distance_from_center = message.text + " км"
-        return calendars.set_arrival_date(message)
+        return schedule.set_arrival_date(message)
 
+def show_or_not_to_show_hotels_photo(message: telebot.types.Message) -> None:
+    """
+    Данная функция спрашивает у пользователя: показать фото?
+    :param message:
+    :return:
+    """
+
+    photo_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    photo_markup.add("Да", "Нет")
+    msg = bot.send_message(message.chat.id, "Показать фото?", reply_markup=photo_markup)
+    bot.register_next_step_handler(msg, photos_handler)
+
+def photos_handler(message: telebot.types.Message) -> None:
+    """
+    Функция, обрабатывающая ответ пользователя из функции show_or_not_to_show_hotels_photo
+    :param message:
+    :return:
+    """
+
+    user = User.get_user(message.from_user.id)
+
+    if message.text == "Да":
+        user.photos_uploaded["status"] = True
+        msg = bot.send_message(message.chat.id, "Сколько фото загрузить? (максимум - 4)")
+        bot.register_next_step_handler(msg, photos_number_setter)
+    elif message.text == "Нет":
+        user.photos_uploaded["status"] = False
+        find_hotels_id(message)
+
+def photos_number_setter(message: telebot.types.Message) -> None:
+    """
+    Сеттер. Проверяет, правильно ли пользователь ввел значение кол-ва выводимых фото
+    :param message:
+    :return:
+    """
+    user = User.get_user(message.from_user.id)
+    if message.text.isdigit():
+        if int(message.text) > 4:
+            bot.send_message(message.chat.id, "Вы ввели значение, превышающее 4.\n"
+                                              "Кол-во фото будет задано по умолчанию - 4.")
+            user.photos_uploaded["number_of_photos"] = 4
+        else:
+            user.photos_uploaded["number_of_photos"] = int(message.text)
+        find_hotels_id(message)
+    else:
+        bot.send_message(message.chat.id, "Значение кол-ва фото должно быть числом.")
+
+
+def find_hotels_id(message: telebot.types.Message):
+    """
+        На первоначальном этапе функция делает запрос к API.
+        В случае получения положительного статуса запроса функция собирает данные по каждому отелю.
+        Далее проверяется статус показа фотографий отеля.
+        Если условие вывода фото user.photos_uploaded["status"] == False, то
+        бот отправляет пользователю собранные сведения об отелях.
+        В противном случае, вызывается функция получения фотографий отелей (get_photos).
+        :param message:
+        :return:
+        """
+
+    user = User.get_user(message.from_user.id)
+    bot.send_message(message.chat.id, "Идет поиск...")
+
+    url_for_hotels_id_list = "https://hotels4.p.rapidapi.com/properties/list"
+
+    if user.command == "/lowprice" or user.command == "/highprice":
+        querystring_for_hotels_list = {"destinationId": user.destination_id,
+                                       "pageNumber": "1",
+                                       "pageSize": user.hotels_number_to_show,
+                                       "checkIn": user.arrival_date,
+                                       "checkOut": user.departure_date,
+                                       "adults1": "1",
+                                       "sortOrder": "PRICE_HIGHEST_FIRST" if user.command == "/highprice" else "PRICE",
+                                       "locale": "ru_RU",
+                                       "currency": "RUB"
+                                       }
+
+    else:
+        querystring_for_hotels_list = {"destinationId": user.destination_id,
+                                       "pageNumber": "1",
+                                       "pageSize": user.hotels_number_to_show,
+                                       "checkIn": user.arrival_date,
+                                       "checkOut": user.departure_date,
+                                       "adults1": "1",
+                                       "priceMin": user.min_price,
+                                       "priceMax": user.max_price,
+                                       "sortOrder": "DISTANCE_FROM_LANDMARK",
+                                       "locale": "ru_RU",
+                                       "currency": "RUB",
+                                       "landmarkIds": "Центр города " + user.distance_from_center}
+
+    headers = {
+        'X-RapidAPI-Key': 'e315c3fde3mshabab10a3881c217p1ae69ejsn04fc52c9199b',
+        'X-RapidAPI-Host': 'hotels4.p.rapidapi.com'
+    }
+    response_for_hotels_id_list = request_to_api(url=url_for_hotels_id_list,
+                                                 headers=headers,
+                                                 querystring=querystring_for_hotels_list)
+
+    if not response_for_hotels_id_list:
+        bot.send_message(message.chat.id, "Произошла ошибка.\nПопробуйте снова.")
+    else:
+        result_of_hotels_id_list = json.loads(response_for_hotels_id_list)["data"]["body"]["searchResults"]["results"]
+        if result_of_hotels_id_list:
+            user.list_of_hotels_id = {i.get('id'):
+                                          {"hotel_name": i.get('name'),
+                                           "hotel_address": i["address"].get("streetAddress"),
+                                           "distance_from_center": i["landmarks"][0].get("distance"),
+                                           "hotel_website": f"https://ru.hotels.com/ho{i.get('id')}",
+                                           "price_for_certain_period": modify_price(
+                                               i['ratePlan']['price'].get('current')),
+                                           "photos": []} for i in result_of_hotels_id_list
+                                      }
+
+            if user.photos_uploaded["status"] is False:
+                text_for_database = ""
+                for hotel in user.list_of_hotels_id:
+                    price_for_night = calculate_price_for_night(user.arrival_date,
+                                                                user.departure_date,
+                                                                user.list_of_hotels_id[hotel][
+                                                                    'price_for_certain_period'])
+                    bot.send_message(message.chat.id,
+                                     f"Отель: {user.list_of_hotels_id[hotel]['hotel_name']}\n"
+                                     f"Сайт отеля: {user.list_of_hotels_id[hotel]['hotel_website']}\n"
+                                     f"Адрес: {user.list_of_hotels_id[hotel]['hotel_address']}\n"
+                                     f"Расстояние до центра: {user.list_of_hotels_id[hotel]['distance_from_center']}\n"
+                                     f"Период проживания: с {user.arrival_date} по {user.departure_date}\n"
+                                     f"Цена за указанный период проживания:"
+                                     f" {add_indent(user.list_of_hotels_id[hotel]['price_for_certain_period'])} руб.\n"
+                                     f"Цена за ночь: {add_indent(price_for_night)} руб.")
+
+                    text_for_database += f"{user.list_of_hotels_id[hotel]['hotel_name']};"
+
+                data_history.add_user_data(user.user_id, user.command, user.request_time, text_for_database)
+                return bot.send_message(message.chat.id,
+                                        f"Поиск завершен.\nНайдено предложений: {len(user.list_of_hotels_id)}")
+            return get_photos(message)
+        else:
+            return bot.send_message(message.chat.id, "По Вашему запросу ничего не найдено")
+
+
+def get_photos(message: telebot.types.Message):
+    """
+    В случае условия user.photos_uploaded["status"] == True
+    функция, которая получает ссылки на фото отелей и добавляет их в атрибут класса User.
+    :param message:
+    :return:
+    """
+    user = User.get_user(message.from_user.id)
+
+    for hotel_data in user.list_of_hotels_id:
+
+        url_for_hotels_photos = "https://hotels4.p.rapidapi.com/properties/get-hotel-photos"
+        querystring_for_hotels_photos = {"id": hotel_data}
+        headers = {
+            'X-RapidAPI-Key': 'e315c3fde3mshabab10a3881c217p1ae69ejsn04fc52c9199b',
+            'X-RapidAPI-Host': 'hotels4.p.rapidapi.com'
+        }
+
+        response_for_hotels_photos = request_to_api(url=url_for_hotels_photos,
+                                                    headers=headers,
+                                                    querystring=querystring_for_hotels_photos)
+
+        if not response_for_hotels_photos:
+            return bot.send_message(message.chat.id, "Произошла ошибка.\nПопробуйте снова.")
+        else:
+            result_of_hotels_photos = json.loads(response_for_hotels_photos)["roomImages"][0]["images"][
+                                      0:user.photos_uploaded["number_of_photos"]]
+
+            for hotel_photos in result_of_hotels_photos:
+                photo_url = hotel_photos['baseUrl'].format(size="z")
+                user.list_of_hotels_id[hotel_data]['photos'].append(photo_url)
+
+    return show_final_data(message)
+
+
+def show_final_data(message: telebot.types.Message):
+    """
+    Конечная функция: отправляет итоговую информацию пользователю.
+    Итоговая информация имеет вид - альбом, состоящий из фотогафий с подписью к первой фотографии.
+    :param message:
+    :return:
+    """
+
+    user = User.get_user(message.from_user.id)
+    text_for_database = ""
+    for hotel in user.list_of_hotels_id:
+        price_for_night = calculate_price_for_night(user.arrival_date,
+                                                    user.departure_date,
+                                                    user.list_of_hotels_id[hotel][
+                                                        'price_for_certain_period'])
+
+        text = f"Отель: {user.list_of_hotels_id[hotel]['hotel_name']}\n" \
+               f"Сайт отеля: {user.list_of_hotels_id[hotel]['hotel_website']}\n" \
+               f"Адрес: {user.list_of_hotels_id[hotel]['hotel_address']}\n" \
+               f"Расстояние до центра: {user.list_of_hotels_id[hotel]['distance_from_center']}\n" \
+               f"Период проживания: с {user.arrival_date} по {user.departure_date}\n" \
+               f"Цена за указанный период проживания: " \
+               f"{add_indent(user.list_of_hotels_id[hotel]['price_for_certain_period'])} руб.\n" \
+               f"Цена за ночь: {add_indent(price_for_night)} руб."
+
+        text_for_database += f"{user.list_of_hotels_id[hotel]['hotel_name']};"
+
+        photos = [types.InputMediaPhoto(media=url, caption=text) if num == 0
+                  else types.InputMediaPhoto(media=url)
+                  for num, url in enumerate(user.list_of_hotels_id[hotel]['photos'])]
+
+        bot.send_media_group(message.chat.id, photos)
+
+    data_history.add_user_data(user.user_id, user.command, user.request_time, text_for_database)
+
+    return bot.send_message(message.chat.id,
+                            f"Поиск завершен.\nНайдено предложений: {len(user.list_of_hotels_id)}")
