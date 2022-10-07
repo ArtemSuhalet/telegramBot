@@ -1,5 +1,5 @@
 import sqlite3
-from database import user_data
+from database.user_data import User
 import telebot
 from loader import bot
 from peewee import *
