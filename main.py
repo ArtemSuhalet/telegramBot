@@ -6,5 +6,5 @@ from database import data_history
 
 if __name__ == '__main__':
     set_default_commands(bot)
-    #data_history.create_db()
+    data_history.create_db()
     bot.infinity_polling()

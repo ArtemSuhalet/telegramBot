@@ -8,7 +8,7 @@ from database import data_history
 from .user_data import User
 from loader import bot
 from database import schedule
-
+from config_data.config import headers
 
 
 
@@ -112,10 +112,6 @@ def find_location(message):
                                       "locale": "ru_RU",
                                       "currency": "USD"
                                       }
-    headers = {
-        'X-RapidAPI-Key': 'e315c3fde3mshabab10a3881c217p1ae69ejsn04fc52c9199b',
-        'X-RapidAPI-Host': 'hotels4.p.rapidapi.com'
-    }
 
     response = request_to_api(url=url_for_destination_id,
                               headers=headers,
@@ -302,10 +298,7 @@ def find_hotels_id(message: telebot.types.Message):
                                        "currency": "RUB",
                                        "landmarkIds": "Центр города " + user.distance_from_center}
 
-    headers = {
-        'X-RapidAPI-Key': 'e315c3fde3mshabab10a3881c217p1ae69ejsn04fc52c9199b',
-        'X-RapidAPI-Host': 'hotels4.p.rapidapi.com'
-    }
+
     response_for_hotels_id_list = request_to_api(url=url_for_hotels_id_list,
                                                  headers=headers,
                                                  querystring=querystring_for_hotels_list)
@@ -377,8 +370,7 @@ def get_photos(message: telebot.types.Message):
         if not response_for_hotels_photos:
             return bot.send_message(message.chat.id, "Произошла ошибка.\nПопробуйте снова.")
         else:
-            result_of_hotels_photos = json.loads(response_for_hotels_photos)["roomImages"][0]["images"][
-                                      0:user.photos_uploaded["number_of_photos"]]
+            result_of_hotels_photos = json.loads(response_for_hotels_photos)["roomImages"][0]["images"][0:user.photos_uploaded["number_of_photos"]]
 
             for hotel_photos in result_of_hotels_photos:
                 photo_url = hotel_photos['baseUrl'].format(size="z")

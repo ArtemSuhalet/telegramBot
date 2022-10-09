@@ -19,6 +19,9 @@ DEFAULT_COMMANDS = (
     ('history', 'Вывод истории поиска отелей')
 )
 
-
+headers = {
+        'X-RapidAPI-Key': 'e315c3fde3mshabab10a3881c217p1ae69ejsn04fc52c9199b',
+        'X-RapidAPI-Host': 'hotels4.p.rapidapi.com'
+    }
 
 

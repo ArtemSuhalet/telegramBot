@@ -1,5 +1,4 @@
 from telebot.types import Message
-from database import data
 from loader import bot
 from database import data_history
 

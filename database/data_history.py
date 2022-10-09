@@ -4,7 +4,11 @@ import telebot
 from loader import bot
 from peewee import *
 
-my_db = sqlite3.connect('bot.db')
+try:
+    my_db = sqlite3.connect('bot.db', check_same_thread=False)
+except InternalError as px:
+    print(str(px))
+
 class BaseModel(Model):
     class Meta:
         database = my_db
@@ -15,18 +19,6 @@ class User_Data(BaseModel):
     user_command = CharField()
     user_time_request = CharField()
     user_hotels_list = CharField()
-
-
-def create_db() -> None:
-    """
-    Функция создает базу данных, если она отсутствует.
-    :return:
-    """
-    try:
-        #my_db.connect()
-        User_Data.create_table()
-    except InternalError as px:
-        print(str(px))
 
 
 def add_user_data(user_telegram_id, command, request_time, text_for_database) -> None:
