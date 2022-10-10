@@ -358,10 +358,6 @@ def get_photos(message: telebot.types.Message):
 
         url_for_hotels_photos = "https://hotels4.p.rapidapi.com/properties/get-hotel-photos"
         querystring_for_hotels_photos = {"id": hotel_data}
-        headers = {
-            'X-RapidAPI-Key': 'e315c3fde3mshabab10a3881c217p1ae69ejsn04fc52c9199b',
-            'X-RapidAPI-Host': 'hotels4.p.rapidapi.com'
-        }
 
         response_for_hotels_photos = request_to_api(url=url_for_hotels_photos,
                                                     headers=headers,

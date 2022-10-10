@@ -2,12 +2,10 @@ import sqlite3
 from database.user_data import User
 import telebot
 from loader import bot
+from config_data.config import my_db
 from peewee import *
 
-try:
-    my_db = sqlite3.connect('bot.db', check_same_thread=False)
-except InternalError as px:
-    print(str(px))
+
 
 class BaseModel(Model):
     class Meta:
@@ -20,7 +18,6 @@ class User_Data(BaseModel):
     user_time_request = CharField()
     user_hotels_list = CharField()
 
-
 def add_user_data(user_telegram_id, command, request_time, text_for_database) -> None:
     """
     Функция создает запись в базе данных.
@@ -32,12 +29,12 @@ def add_user_data(user_telegram_id, command, request_time, text_for_database) ->
     """
     User_Data.create_table()
     with my_db:
+
         User_Data.create(user_telegram_id=user_telegram_id,
                          user_command=command,
                          user_time_request=request_time,
                          user_hotels_list=text_for_database
                          )
-
 
 def to_use_literals(string: str) -> str:
     """

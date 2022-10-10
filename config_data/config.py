@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv, find_dotenv
-
+import sqlite3
+from database.data_history import User_Data
 
 if not find_dotenv():
     exit('Переменные окружения не загружены т.к отсутствует файл .env')
@@ -23,5 +24,7 @@ headers = {
         'X-RapidAPI-Key': 'e315c3fde3mshabab10a3881c217p1ae69ejsn04fc52c9199b',
         'X-RapidAPI-Host': 'hotels4.p.rapidapi.com'
     }
+
+my_db = sqlite3.connect('bot.db', check_same_thread=False)
 
 
