@@ -9,7 +9,7 @@ from .user_data import User
 from loader import bot
 from database import schedule
 from config_data.config import headers
-
+from config_data.config import emoji
 
 
 def delete_spans(data: str) -> str:
@@ -118,7 +118,7 @@ def find_location(message):
                               querystring=querystring_for_destination_id)
 
     if not response:
-        bot.send_message(message.chat.id, "Произошла ошибка.\nПопробуйте снова.")
+        bot.send_message(message.chat.id, "*Произошла ошибка.\nПопробуйте снова.*", parse_mode='Markdown')
     else:
 
         result = json.loads(response)['suggestions'][0]['entities']
@@ -133,17 +133,17 @@ def find_location(message):
             for elem in caption_dict_with_destination_id:
                 markup.add(types.InlineKeyboardButton(elem, callback_data=caption_dict_with_destination_id[elem]))
 
-            bot.send_message(message.chat.id, "Выберите локацию", reply_markup=markup)
+            bot.send_message(message.chat.id, "_Выберите локацию_\n", reply_markup=markup, parse_mode='Markdown')
         else:
-            return bot.send_message(message.chat.id, "По Вашему запросу ничего не найдено.\n"
-                                                     "Пожалуйста, проверьте, правильно ли указан город.")
+            return bot.send_message(message.chat.id, "*По Вашему запросу ничего не найдено.\n"
+                                                     "Пожалуйста, проверьте, правильно ли указан город.*\n", parse_mode='Markdown')
 
     @bot.callback_query_handler(func=lambda call: True)
     def callback_inline(call):
         user.destination_id = call.data
         msg = bot.edit_message_text(chat_id=call.message.chat.id,
                                     message_id=call.message.message_id,
-                                    text="Введите кол-во отелей (максимум - 10):",
+                                    text="<em>Введите кол-во отелей (максимум - 10):</em>", parse_mode='HTML',
                                     reply_markup=None)
 
         bot.register_next_step_handler(msg, set_hotels_number)
@@ -160,15 +160,15 @@ def set_hotels_number(message: telebot.types.Message) -> telebot.types.Message o
 
     if message.text.isdigit():
         if int(message.text) > 10:
-            return bot.send_message(message.chat.id, "Вы ввели значение, превышающее 10.\nПопробуйте снова.")
+            return bot.send_message(message.chat.id, "*Вы ввели значение, превышающее 10.\nПопробуйте снова.*", parse_mode='Markdown')
 
         user.hotels_number_to_show = int(message.text)
         if user.command == "/lowprice" or user.command == "/highprice":
             return schedule.set_arrival_date(message)
-        msg = bot.send_message(message.chat.id, "Введите диапазон цен (пример ввода: 1000-5000):")
+        msg = bot.send_message(message.chat.id, "_Введите диапазон цен (пример ввода: 1000-5000):_", parse_mode='Markdown')
         return bot.register_next_step_handler(msg, set_price_range)
 
-    bot.send_message(message.chat.id, "Ошибка ввода. Необходимо ввести число от 1 до 25.")
+    bot.send_message(message.chat.id, "*Ошибка ввода. Необходимо ввести число от 1 до 25.*", parse_mode='Markdown')
 
 
 def set_price_range(message: telebot.types.Message) -> None:
@@ -187,12 +187,12 @@ def set_price_range(message: telebot.types.Message) -> None:
             else:
                 price_min, price_max = int(price_range[1]), int(price_range[0])
             user.min_price, user.max_price = price_min, price_max#запись в user
-            msg = bot.send_message(message.chat.id, "Введите удаленность от центра в км:")
+            msg = bot.send_message(message.chat.id, "_Введите удаленность от центра в км:_", parse_mode='Markdown')
 
             bot.register_next_step_handler(msg, set_distance_from_center)
 
     else:
-        bot.send_message(message.chat.id, "Ошибка ввода. Попробуйте снова.")
+        bot.send_message(message.chat.id, "*Ошибка ввода. Попробуйте снова.*", parse_mode='Markdown')
 
 
 def set_distance_from_center(message: types.Message):
@@ -215,8 +215,8 @@ def show_or_not_to_show_hotels_photo(message: telebot.types.Message) -> None:
     """
 
     photo_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-    photo_markup.add("Да", "Нет")
-    msg = bot.send_message(message.chat.id, "Показать фото?", reply_markup=photo_markup)
+    photo_markup.add("Да", "Нет".format(emoji['Да'], emoji['Нет']))
+    msg = bot.send_message(message.chat.id, "_Показать фото?_", reply_markup=photo_markup, parse_mode='Markdown')
     bot.register_next_step_handler(msg, photos_handler)
 
 def photos_handler(message: telebot.types.Message) -> None:
@@ -230,7 +230,7 @@ def photos_handler(message: telebot.types.Message) -> None:
 
     if message.text == "Да":
         user.photos_uploaded["status"] = True
-        msg = bot.send_message(message.chat.id, "Сколько фото загрузить? (максимум - 4)")
+        msg = bot.send_message(message.chat.id, "_Сколько фото загрузить? (максимум - 4)_", parse_mode='Markdown')
         bot.register_next_step_handler(msg, photos_number_setter)
     elif message.text == "Нет":
         user.photos_uploaded["status"] = False
@@ -245,14 +245,14 @@ def photos_number_setter(message: telebot.types.Message) -> None:
     user = User.get_user(message.from_user.id)
     if message.text.isdigit():
         if int(message.text) > 4:
-            bot.send_message(message.chat.id, "Вы ввели значение, превышающее 4.\n"
-                                              "Кол-во фото будет задано по умолчанию - 4.")
+            bot.send_message(message.chat.id, "*Вы ввели значение, превышающее 4.\n"
+                                              "Кол-во фото будет задано по умолчанию - 4.*", parse_mode='Markdown')
             user.photos_uploaded["number_of_photos"] = 4
         else:
             user.photos_uploaded["number_of_photos"] = int(message.text)
         find_hotels_id(message)
     else:
-        bot.send_message(message.chat.id, "Значение кол-ва фото должно быть числом.")
+        bot.send_message(message.chat.id, "*Значение кол-ва фото должно быть числом.*", parse_mode='Markdown')
 
 
 def find_hotels_id(message: telebot.types.Message):
@@ -304,7 +304,7 @@ def find_hotels_id(message: telebot.types.Message):
                                                  querystring=querystring_for_hotels_list)
 
     if not response_for_hotels_id_list:
-        bot.send_message(message.chat.id, "Произошла ошибка.\nПопробуйте снова.")
+        bot.send_message(message.chat.id, "*Произошла ошибка.\nПопробуйте снова.*", parse_mode='Markdown')
     else:
         result_of_hotels_id_list = json.loads(response_for_hotels_id_list)["data"]["body"]["searchResults"]["results"]
         if result_of_hotels_id_list:
@@ -342,7 +342,7 @@ def find_hotels_id(message: telebot.types.Message):
                                         f"Поиск завершен.\nНайдено предложений: {len(user.list_of_hotels_id)}")
             return get_photos(message)
         else:
-            return bot.send_message(message.chat.id, "По Вашему запросу ничего не найдено")
+            return bot.send_message(message.chat.id, "_По Вашему запросу ничего не найдено_", parse_mode='Markdown')
 
 
 def get_photos(message: telebot.types.Message):
@@ -364,7 +364,7 @@ def get_photos(message: telebot.types.Message):
                                                     querystring=querystring_for_hotels_photos)
 
         if not response_for_hotels_photos:
-            return bot.send_message(message.chat.id, "Произошла ошибка.\nПопробуйте снова.")
+            return bot.send_message(message.chat.id, "*Произошла ошибка.\nПопробуйте снова.*", parse_mode='Markdown')
         else:
             result_of_hotels_photos = json.loads(response_for_hotels_photos)["roomImages"][0]["images"][0:user.photos_uploaded["number_of_photos"]]
 
