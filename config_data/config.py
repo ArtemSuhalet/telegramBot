@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv, find_dotenv
 import sqlite3
-from database.data_history import User_Data
+import emoji
 
 if not find_dotenv():
     exit('Переменные окружения не загружены т.к отсутствует файл .env')
@@ -28,3 +28,10 @@ headers = {
 my_db = sqlite3.connect('bot.db', check_same_thread=False)
 
 
+emoji = {'start': '\U0001F603',
+         'low': '\U0001f30d',
+         'high': '\U0001f30d',
+         'best': '\U0001f30d',
+         'history': '\U0001F4DD',
+         'echo': '\U0001F926',
+         }
