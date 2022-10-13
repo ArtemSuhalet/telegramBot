@@ -168,7 +168,7 @@ def set_hotels_number(message: telebot.types.Message) -> telebot.types.Message o
         msg = bot.send_message(message.chat.id, "_Введите диапазон цен (пример ввода: 1000-5000):_", parse_mode='Markdown')
         return bot.register_next_step_handler(msg, set_price_range)
 
-    bot.send_message(message.chat.id, "*Ошибка ввода. Необходимо ввести число от 1 до 25.*", parse_mode='Markdown')
+    bot.send_message(message.chat.id, "*Ошибка ввода. Необходимо ввести число от 1 до 10.*", parse_mode='Markdown')
 
 
 def set_price_range(message: telebot.types.Message) -> None:
@@ -193,6 +193,8 @@ def set_price_range(message: telebot.types.Message) -> None:
 
     else:
         bot.send_message(message.chat.id, "*Ошибка ввода. Попробуйте снова.*", parse_mode='Markdown')
+        bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAEGE3ZjSAIoZNxHZhX2Wr7BPNc6DyqqwQACMwEAAlKJkSPRi6zI3BlZmyoE')
+
 
 
 def set_distance_from_center(message: types.Message):
@@ -215,7 +217,7 @@ def show_or_not_to_show_hotels_photo(message: telebot.types.Message) -> None:
     """
 
     photo_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-    photo_markup.add("Да", "Нет".format(emoji['Да'], emoji['Нет']))
+    photo_markup.add(emoji['Да'], emoji['Нет'])
     msg = bot.send_message(message.chat.id, "_Показать фото?_", reply_markup=photo_markup, parse_mode='Markdown')
     bot.register_next_step_handler(msg, photos_handler)
 
@@ -228,11 +230,11 @@ def photos_handler(message: telebot.types.Message) -> None:
 
     user = User.get_user(message.from_user.id)
 
-    if message.text == "Да":
+    if message.text == emoji['Да']:
         user.photos_uploaded["status"] = True
         msg = bot.send_message(message.chat.id, "_Сколько фото загрузить? (максимум - 4)_", parse_mode='Markdown')
         bot.register_next_step_handler(msg, photos_number_setter)
-    elif message.text == "Нет":
+    elif message.text == emoji['Нет']:
         user.photos_uploaded["status"] = False
         find_hotels_id(message)
 
@@ -253,6 +255,7 @@ def photos_number_setter(message: telebot.types.Message) -> None:
         find_hotels_id(message)
     else:
         bot.send_message(message.chat.id, "*Значение кол-ва фото должно быть числом.*", parse_mode='Markdown')
+        bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAEGE3ZjSAIoZNxHZhX2Wr7BPNc6DyqqwQACMwEAAlKJkSPRi6zI3BlZmyoE')
 
 
 def find_hotels_id(message: telebot.types.Message):
@@ -269,6 +272,7 @@ def find_hotels_id(message: telebot.types.Message):
 
     user = User.get_user(message.from_user.id)
     bot.send_message(message.chat.id, "Идет поиск...")
+    bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAEGE3RjSAHGlSYIEGtiLRsLdyOmS5zN8QACMgEAAlKJkSNZdMrsEXdk9SoE')
 
     url_for_hotels_id_list = "https://hotels4.p.rapidapi.com/properties/list"
 
@@ -305,6 +309,7 @@ def find_hotels_id(message: telebot.types.Message):
 
     if not response_for_hotels_id_list:
         bot.send_message(message.chat.id, "*Произошла ошибка.\nПопробуйте снова.*", parse_mode='Markdown')
+        bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAEGE3ZjSAIoZNxHZhX2Wr7BPNc6DyqqwQACMwEAAlKJkSPRi6zI3BlZmyoE')
     else:
         result_of_hotels_id_list = json.loads(response_for_hotels_id_list)["data"]["body"]["searchResults"]["results"]
         if result_of_hotels_id_list:
@@ -410,5 +415,4 @@ def show_final_data(message: telebot.types.Message):
 
     data_history.add_user_data(user.user_id, user.command, user.request_time, text_for_database)
 
-    return bot.send_message(message.chat.id,
-                            f"Поиск завершен.\nНайдено предложений: {len(user.list_of_hotels_id)}")
+    return bot.send_message(message.chat.id, f"Поиск завершен.\nНайдено предложений: {len(user.list_of_hotels_id)}")

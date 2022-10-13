@@ -29,9 +29,7 @@ my_db = sqlite3.connect('bot.db', check_same_thread=False)
 
 
 emoji = {'start': '\U0001F603',
-         'low': '\U0001f30d',
-         'high': '\U0001f30d',
-         'best': '\U0001f30d',
+         'choose_city': '\U0001f30d',
          'history': '\U0001F4DD',
          'echo': '\U0001F926',
          'Да': '\U00002714',
