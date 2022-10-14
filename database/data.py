@@ -174,7 +174,7 @@ def set_hotels_number(message: telebot.types.Message) -> telebot.types.Message o
 def set_price_range(message: telebot.types.Message) -> None:
     """
     Сеттер для диапазона цен.
-    Проверяет, правилньо ли пользователь ввел диапазон цен в соответствии с примером.
+    Проверяет, правильно ли пользователь ввел диапазон цен в соответствии с примером.
     :param message:
     :return:
     """
@@ -383,7 +383,7 @@ def get_photos(message: telebot.types.Message):
 def show_final_data(message: telebot.types.Message):
     """
     Конечная функция: отправляет итоговую информацию пользователю.
-    Итоговая информация имеет вид - альбом, состоящий из фотогафий с подписью к первой фотографии.
+    Итоговая информация имеет вид - альбом, состоящий из фотографий с подписью к первой фотографии.
     :param message:
     :return:
     """

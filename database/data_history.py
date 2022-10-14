@@ -1,4 +1,4 @@
-import sqlite3
+
 from database.user_data import User
 import telebot
 from loader import bot
@@ -17,6 +17,7 @@ class User_Data(BaseModel):
     user_command = CharField()
     user_time_request = CharField()
     user_hotels_list = CharField()
+
 
 def add_user_data(user_telegram_id, command, request_time, text_for_database) -> None:
     """
