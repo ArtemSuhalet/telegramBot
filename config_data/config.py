@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv, find_dotenv
 import sqlite3
-
+from loguru import logger
 
 if not find_dotenv():
     exit('Переменные окружения не загружены т.к отсутствует файл .env')
@@ -35,3 +35,5 @@ emoji = {'start': '\U0001F603',
          'Да': '\U00002714',
          'Нет': '\U0000274C'
          }
+
+logger.add('debug.log', format="{time} {level} {message}", level='DEBUG', rotation='500 KB', compression='zip', serialize=True)

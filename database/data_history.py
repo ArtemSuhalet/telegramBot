@@ -1,10 +1,9 @@
-
 from database.user_data import User
 import telebot
 from loader import bot
 from config_data.config import my_db
 from peewee import *
-
+from loguru import logger
 
 
 class BaseModel(Model):
@@ -19,6 +18,7 @@ class User_Data(BaseModel):
     user_hotels_list = CharField()
 
 
+@logger.catch
 def add_user_data(user_telegram_id, command, request_time, text_for_database) -> None:
     """
     Функция создает запись в базе данных.
@@ -45,7 +45,7 @@ def to_use_literals(string: str) -> str:
     """
     return string.replace(';', '\n')
 
-
+@logger.catch
 def show_history(message: telebot.types.Message) -> None:
     """
     Функция, которая отправляет пользователю историю запросов.

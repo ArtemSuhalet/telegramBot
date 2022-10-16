@@ -1,4 +1,5 @@
 from telebot import types
+from telebot.types import InputMediaPhoto
 import requests
 import re
 import json
@@ -10,7 +11,7 @@ from loader import bot
 from database import schedule
 from config_data.config import headers
 from config_data.config import emoji
-
+from loguru import logger
 
 def delete_spans(data: str) -> str:
     """
@@ -75,6 +76,8 @@ def calculate_price_for_night(date_1, date_2, price):
     date_delta = int((d_2 - d_1).days)
     return int(price) // date_delta
 
+
+@logger.catch
 def request_to_api(url, headers, querystring):
     """
     Функция, производящая запрос к API.
@@ -95,7 +98,7 @@ def request_to_api(url, headers, querystring):
     except requests.exceptions.Timeout:
         return None
 
-
+@logger.catch
 def find_location(message):
     """
     Функция для определения локации поиска.
@@ -148,6 +151,7 @@ def find_location(message):
 
         bot.register_next_step_handler(msg, set_hotels_number)
 
+@logger.catch
 def set_hotels_number(message: telebot.types.Message) -> telebot.types.Message or None:
     """
     Сеттер для кол-ва выводимых отелей.
@@ -170,7 +174,7 @@ def set_hotels_number(message: telebot.types.Message) -> telebot.types.Message o
 
     bot.send_message(message.chat.id, "*Ошибка ввода. Необходимо ввести число от 1 до 10.*", parse_mode='Markdown')
 
-
+@logger.catch
 def set_price_range(message: telebot.types.Message) -> None:
     """
     Сеттер для диапазона цен.
@@ -209,6 +213,7 @@ def set_distance_from_center(message: types.Message):
         user.distance_from_center = message.text + " км"
         return schedule.set_arrival_date(message)
 
+@logger.catch
 def show_or_not_to_show_hotels_photo(message: telebot.types.Message) -> None:
     """
     Данная функция спрашивает у пользователя: показать фото?
@@ -221,6 +226,7 @@ def show_or_not_to_show_hotels_photo(message: telebot.types.Message) -> None:
     msg = bot.send_message(message.chat.id, "_Показать фото?_", reply_markup=photo_markup, parse_mode='Markdown')
     bot.register_next_step_handler(msg, photos_handler)
 
+@logger.catch
 def photos_handler(message: telebot.types.Message) -> None:
     """
     Функция, обрабатывающая ответ пользователя из функции show_or_not_to_show_hotels_photo
@@ -238,6 +244,7 @@ def photos_handler(message: telebot.types.Message) -> None:
         user.photos_uploaded["status"] = False
         find_hotels_id(message)
 
+@logger.catch
 def photos_number_setter(message: telebot.types.Message) -> None:
     """
     Сеттер. Проверяет, правильно ли пользователь ввел значение кол-ва выводимых фото
@@ -258,6 +265,7 @@ def photos_number_setter(message: telebot.types.Message) -> None:
         bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAEGE3ZjSAIoZNxHZhX2Wr7BPNc6DyqqwQACMwEAAlKJkSPRi6zI3BlZmyoE')
 
 
+@logger.catch
 def find_hotels_id(message: telebot.types.Message):
     """
         На первоначальном этапе функция делает запрос к API.
@@ -349,7 +357,7 @@ def find_hotels_id(message: telebot.types.Message):
         else:
             return bot.send_message(message.chat.id, "_По Вашему запросу ничего не найдено_", parse_mode='Markdown')
 
-
+@logger.catch
 def get_photos(message: telebot.types.Message):
     """
     В случае условия user.photos_uploaded["status"] == True
@@ -379,7 +387,7 @@ def get_photos(message: telebot.types.Message):
 
     return show_final_data(message)
 
-
+@logger.catch
 def show_final_data(message: telebot.types.Message):
     """
     Конечная функция: отправляет итоговую информацию пользователю.
