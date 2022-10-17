@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv, find_dotenv
 import sqlite3
 from loguru import logger
+from peewee import *
 
 if not find_dotenv():
     exit('Переменные окружения не загружены т.к отсутствует файл .env')
@@ -25,8 +26,9 @@ headers = {
         'X-RapidAPI-Host': 'hotels4.p.rapidapi.com'
     }
 
-my_db = sqlite3.connect('bot.db')
+#my_db = sqlite3.connect('bot.db', check_same_thread=False)
 #, check_same_thread=False
+my_db = SqliteDatabase('bot.db')
 
 emoji = {'start': '\U0001F603',
          'choose_city': '\U0001f30d',
