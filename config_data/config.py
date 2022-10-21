@@ -26,8 +26,7 @@ headers = {
         'X-RapidAPI-Host': 'hotels4.p.rapidapi.com'
     }
 
-#my_db = sqlite3.connect('bot.db', check_same_thread=False)
-#, check_same_thread=False
+
 my_db = SqliteDatabase('bot.db')
 
 emoji = {'start': '\U0001F603',

@@ -1,4 +1,4 @@
-from database.user_data import User
+from database.user_data import *
 import telebot
 from loader import bot
 from config_data.config import my_db
@@ -43,7 +43,6 @@ def add_user_data(user_telegram_id, command, request_time, text_for_database) ->
     :return:
     """
 
-    #User_Data.create_table()
     with my_db:
         User_Data.create(user_telegram_id=user_telegram_id,
                             user_command=command,

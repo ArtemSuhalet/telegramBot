@@ -2,7 +2,7 @@ from loader import bot
 from telegram_bot_calendar import DetailedTelegramCalendar, LSTEP
 from datetime import timedelta, date
 from database import data
-from database.user_data import User
+from database.user_data import *
 
 
 
